@@ -1,0 +1,34 @@
+{
+  "Clothing":"C10",
+  "Outer":"C11",
+  "Top":"C12",
+  "Dress":"C13",
+  "Jumpsuit":"C14",
+  "Suit":"C15",
+  "Swimsuit":"C16",
+  "Pants":"C17",
+  "Skirts":"C18",
+
+  "Footwear":"F10",
+  "Shoes":"F11",
+  "Sneakers":"F12",
+
+  "Bag":"B10",
+  "Handbag":"B11",
+  "Backpack":"B12",
+  "Travelbag":"B13",
+
+  "Jewelry":"J10",
+  "Necklace":"J11",
+  "Earring":"J12",
+  "Bracelet":"J13",
+
+  "Accessary":"A10",
+  "Eyewear":"A11",
+  "Belt":"A12",
+  "Scarves":"A13",
+  "Gloves":"A14",
+  "Hats":"A15",
+  "Watch":"A16",
+  "Necktie":"A17"
+}
