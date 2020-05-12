@@ -22,6 +22,29 @@ class Elk:
             if not self.es.indices.exists(index=index):
                 self.es.indices.create(index=index, body=mapping)
 
+    def bulk_api_testset(self, total_vec):
+        docs = []
+        es_time = time.time()
+        for v_idx in total_vec.keys():
+
+            new_index = "testset_pirs"
+            for count in range(len(total_vec[v_idx])):
+                docs.append({
+                    '_index': new_index,
+                    '_source': {
+                        "raw_box": np.array(total_vec[v_idx][count]['raw_box']).tolist(),
+                        "yolo_vector_mac": encode_array(total_vec[v_idx][count]['yolo_vector_mac']),
+                        "yolo_vector_spoc": encode_array(total_vec[v_idx][count]['yolo_vector_spoc']),
+                        "yolo_vector_cat": encode_array(total_vec[v_idx][count]['yolo_vector_cat']),
+                        "resnet_vector": encode_array(total_vec[v_idx][count]['resnet_vector']),
+                        "img_path" : total_vec[v_idx][count]['img_path'],
+                        "cat_key": total_vec[v_idx][count]['category'],
+                        "@timestamp": utc_time()
+                    }
+                })
+        helpers.bulk(self.es, docs)
+        print('Interface time for sending to elastic', time.time() - es_time)
+
     def bulk_api_res_yolo(self, total_vec, data_dict):
         docs = []
         es_time = time.time()
@@ -101,12 +124,21 @@ class Elk:
         total_body=''
         for num in range(len(idx_list)):
             index = '{"index":"'+str(idx_list[num])+'"}'
-            body_data = '{"_source": {"includes": ["_index", "_score", "box_statue", "cat_key", "gs_bucket", "click_url", "image_path", "raw_box"]},"query": {"function_score": {"boost_mode": "replace","script_score": {"script": {"source": "binary_vector_score", "lang": "knn","params": {"cosine": true,"field": "'+vector_type+'","encoded_vector": "' + vb_list[num] + '"}}}}},"size": "'+str(k)+'"}'
+            body_data = '{"_source": {"includes": ["_index", "_score", "box_statue", "cat_key", "gs_bucket", "click_url", "image_path", "raw_box"]},' \
+                        '"query": {' \
+                        '"function_score": {' \
+                        '"boost_mode": "replace","script_score": {' \
+                        '"script": {' \
+                        '"source": "binary_vector_score", ' \
+                        '"lang": "knn","' \
+                        'params": {"cosine": true,' \
+                        '"field": "'+vector_type+'","encoded_vector": "' + vb_list[num] + '"}}}}},"size": "'+str(k)+'"}'
             total_body = total_body+index+'\n'+body_data+'\n'
 
         res = self.es.msearch(
             body=total_body
         )
+
         print('Interface time for searching vector', time.time() - st_time)
         return json.dumps(res, ensure_ascii=True, indent='\t')
 
@@ -114,11 +146,11 @@ class Elk:
         now = datetime.now()
         index = "search_img"
         doc = {
-            "vector" : encode_array(vec),
-            "c_key" : c_key,
-            "img_url" : img_url,
-            "ymd" : str(now.year)+str(now.month)+str(now.day),
-            "hour" : str(now.hour)
+            "vector": encode_array(vec),
+            "c_key": c_key,
+            "img_url": img_url,
+            "ymd": str(now.year)+str(now.month)+str(now.day),
+            "hour": str(now.hour)
         }
 
         self.es.index(index=index, doc_type="_doc", body=doc)
