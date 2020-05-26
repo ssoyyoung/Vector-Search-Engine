@@ -1,4 +1,4 @@
 apex/*
-__pycache__/*
+*__pycache__*
 resnet/resnet_irs_v5
 testset/*
