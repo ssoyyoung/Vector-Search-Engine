@@ -20,8 +20,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from utils.vector_extractor_v2 import Yolov3
 
+# APIRouter() 객체 생성
 router = APIRouter()
 
+# 상위 prefix로 설정 한 search_vec/box로 연결.
 @router.post("/box")
 async def search_vec(vector: model.Vector):
     es_res = {}
