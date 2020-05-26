@@ -17,7 +17,6 @@ import base64
 from io import BytesIO
 from PIL import Image
 from fastapi import FastAPI
-from pydantic import BaseModel
 from utils.vector_extractor_v2 import Yolov3
 
 router = APIRouter()
