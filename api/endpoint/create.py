@@ -13,6 +13,8 @@ from utils.elasticsearch import Elk
 from utils.img_to_vec import imgtovec
 from utils.checkDouble import Image2Vector
 
+from api.database.connectDB import SQL
+
 import base64
 from io import BytesIO
 from PIL import Image
@@ -28,11 +30,11 @@ async def make_vector_db(cate: str):
     save_time = time.time()
     
     if cate == "all":
-        sql = "SELECT * FROM `crawling_list` WHERE STATUS=1 AND cat_key NOT LIKE '%10'"
+        sql_query = "SELECT * FROM `crawling_list` WHERE STATUS=1 AND cat_key NOT LIKE '%10'"
     else:
-        sql = "SELECT * FROM `crawling_list` WHERE STATUS=1 AND cat_key='"+cate+"'"
-    print(sql)
-    product_list = imgtovec.connect_db(imgtovec, sql)
+        sql_query = "SELECT * FROM `crawling_list` WHERE STATUS=1 AND cat_key='"+cate+"'"
+
+    product_list = SQL.connect_db(imgtovec, sql_query)
     print('Total count of product list', len(product_list))
 
     batch_size, split_data = 100, 1000

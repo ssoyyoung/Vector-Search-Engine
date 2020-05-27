@@ -1,4 +1,0 @@
-classes=14
-train=/home/piclick/data/content/train.txt
-valid=/home/piclick/data/content/val.txt
-names=/home/piclick/yolov3/data/fashion/fashion_c14.names
