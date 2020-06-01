@@ -23,10 +23,9 @@ from utils.vector_extractor_v2 import Yolov3
 
 router = APIRouter()
 
-
 @router.put("/db/{cate}")
 async def make_vector_db(cate: str):
-    debug = True
+    debug = False
     save_time = time.time()
     
     if cate == "all":
@@ -99,6 +98,7 @@ async def make_vector_db_testset():
         with open(img_path, "rb") as f:
             img_b64 = base64.b64encode(f.read())
 
+        
         vec = Yolov3.vector_extraction_service_testset(Yolov3, img_b64, img_path)
 
         for idx in vec.keys():

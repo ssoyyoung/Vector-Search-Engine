@@ -8,7 +8,7 @@ class Elk:
     es = Elasticsearch('172.16.0.240:9200', timeout=30, max_retries=10, retry_on_timeout=True)
 
     search_index = 'pirs_'
-    save_index = 'pirs_'
+    save_index = 'resnet1024_'
 
     def create_index(self, index):
         with open('mapping.json', 'r') as f:
@@ -78,10 +78,10 @@ class Elk:
                         "p_key": data_dict[total_vec[v_idx][count]['img_path']][3],  # 임시
                         "gs_bucket" : "https://storage.cloud.google.com"+data_dict[total_vec[v_idx][count]['img_path']][9][4:],
                         "raw_box": np.array(total_vec[v_idx][count]['raw_box']).tolist(),
-                        "yolo_vector_mac": encode_array(total_vec[v_idx][count]['yolo_vector_mac']),
-                        "yolo_vector_spoc": encode_array(total_vec[v_idx][count]['yolo_vector_spoc']),
-                        "yolo_vector_spoc_w/o_norm": encode_array(total_vec[v_idx][count]['yolo_vector_spoc']),
-                        "yolo_vector_cat": encode_array(total_vec[v_idx][count]['yolo_vector_cat']),
+                        #"yolo_vector_mac": encode_array(total_vec[v_idx][count]['yolo_vector_mac']),
+                        #"yolo_vector_spoc": encode_array(total_vec[v_idx][count]['yolo_vector_spoc']),
+                        #"yolo_vector_spoc_w/o_norm": encode_array(total_vec[v_idx][count]['yolo_vector_spoc']),
+                        #"yolo_vector_cat": encode_array(total_vec[v_idx][count]['yolo_vector_cat']),
                         "resnet_vector": encode_array(total_vec[v_idx][count]['resnet_vector']),
                         "box_statue": total_vec[v_idx][count]['state'],
                         "@timestamp": utc_time()

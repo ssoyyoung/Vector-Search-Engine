@@ -24,7 +24,7 @@ with open('utils/category_mapping_search.json', 'r') as f:
 
 
 class Resnet:
-    model_path = "resnet/resnet_irs_v5"
+    model_path = "resnet/resnet_irs_v9"
     model = torch.load(model_path)
     model.eval()
 
@@ -43,7 +43,7 @@ class Resnet:
             transforms.Resize(input_size),
             transforms.CenterCrop(input_size),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Normalize(mean=[0.4589, 0.4159, 0.4185] , std=[0.2328, 0.2218, 0.2162]),
         ])
         input_tensor = preprocess(crop_image)
         input_batch = input_tensor.unsqueeze(0)  # create a mini-batch as expected by the model
@@ -145,18 +145,18 @@ class Yolov3:
                         xyxy = [np.asarray(torch.round(x).cpu().numpy(), dtype=np.int32) for x in xyxy]
 
                         RESNET = Resnet.get_feature_vector(Resnet, [int(x) for x in xyxy], paths[i])
-                        MAC = max_pooling_tensor(feature_result)
-                        SPoC = average_pooling_tensor(feature_result)
-                        CAT = torch.cat((MAC, SPoC))
+                        #MAC = max_pooling_tensor(feature_result)
+                        #SPoC = average_pooling_tensor(feature_result)
+                        #CAT = torch.cat((MAC, SPoC))
 
                         xyxy[0], xyxy[2] = xyxy[0] / im0shape[1], xyxy[2] / im0shape[1]
                         xyxy[1], xyxy[3] = xyxy[1] / im0shape[0], xyxy[3] / im0shape[0]
 
                         class_data = {
                             'raw_box': xyxy,
-                            'yolo_vector_mac': MAC.detach().cpu().numpy(),
-                            'yolo_vector_spoc': SPoC.detach().cpu().numpy(),
-                            'yolo_vector_cat': CAT.detach().cpu().numpy(),
+                        #    'yolo_vector_mac': MAC.detach().cpu().numpy(),
+                        #    'yolo_vector_spoc': SPoC.detach().cpu().numpy(),
+                        #    'yolo_vector_cat': CAT.detach().cpu().numpy(),
                             'resnet_vector': RESNET,
                             'img_path': paths[i],
                             'state': 'fbox'
@@ -284,7 +284,6 @@ class Yolov3:
         print("Inference time for a image : {}".format(batch_end))
 
         return img_res
-
 
 
     def vector_extraction_batch(self, data, category, batch_size = 1, rp=False, pooling='max'):
