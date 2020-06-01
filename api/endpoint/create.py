@@ -82,7 +82,7 @@ async def make_vector_db(cate: str):
 
 @router.post("/testset")
 async def make_vector_db_testset():
-    debug=True
+    debug=False
     save_time = time.time()
 
     product_list = glob.glob("testset/*.*")
