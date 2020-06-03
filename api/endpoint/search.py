@@ -44,6 +44,7 @@ async def search_vec(vector: model.Vector):
 
     if len(vec) == 0: return "-1"
 
+    d = time.time()
     for idx in list(vec.keys()):
         for cnt in range(len(vec[idx])):
             vector_bs = encode_array(vec[idx][cnt]['feature_vector'])
@@ -56,27 +57,37 @@ async def search_vec(vector: model.Vector):
             #box_size = (rb[2]-rb[0])*(rb[3]-rb[1])
             # if box_size < 0.07: continue
 
-            cx, cy = (rb[2]-rb[0])/2+rb[0], (rb[3]-rb[1])/2+rb[1]
+            """ cx, cy = (rb[2]-rb[0])/2+rb[0], (rb[3]-rb[1])/2+rb[1]
             if not 0.1 < cx < 0.9 or not 0.1 < cy < 0.9:
                 print('cx or cy out of bound', (cx, cy))
-                continue
+                continue """
 
             rb_list.append(rb)
             vb_list.append(vector_bs)
             idx_list.append(search_idx)
             cate_list.append(cate)
+    
+    print("data collect", time.time()-d)
 
     if len(rb_list) == 0:
         return "-1"
+    
+    el_time = time.time()
     res = Elk.multi_search_vec(Elk, idx_list, vb_list, vector.k, vector_type)
+    print("multi search ", time.time()-el_time)
+
+    parsing_time = time.time()
     es_res['es_res'] = es_parsing(res, rb_list, cate_list, multi=True)
+    print("parsing time", time.time()-parsing_time)
+    
     es_res['service_time'] = time.time() - search_time
     print('Interface time for searching vec', time.time()-search_time)
-    print(es_res)
 
     return es_res
 
 img2vec = Image2Vector(cuda=True)
+
+
 
 @router.post("/exist")
 async def search_exist(d_img: model.DoubleIMG):
