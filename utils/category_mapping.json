@@ -1,3 +1,5 @@
+// category mappting json
+
 {
   "C10": "clothing",
   "C11": "outer",
@@ -32,3 +34,4 @@
   "A16": "watch",
   "A17": "necktie"
 }
+
