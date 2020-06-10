@@ -15,7 +15,6 @@ def es_parsing(res, rb_list=[], cate_list=[], multi=True):
             es_obj['cat_key'] = cate_list[idx]
             es_obj['search_result'] = es
             es_total.append(es_obj)
-
     else: #one img
         es = []
         es_obj = {}

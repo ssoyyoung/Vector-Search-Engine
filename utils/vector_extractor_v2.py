@@ -24,11 +24,18 @@ with open('utils/category_mapping_search.json', 'r') as f:
 
 
 class Resnet:
-    model_path = "resnet/resnet_irs_v9"
-    model = torch.load(model_path)
-    model.eval()
 
-    def get_feature_vector(self, rawbox, img_path, svc=False):
+    model_path_1024 = "resnet/resnet_irs_v9"
+    model_1024 = torch.load(model_path_1024)
+    model_1024.eval()
+    print("loading 1024 resnet")
+
+    model_path_512 = "resnet/resnet_irs_v5"
+    model_512 = torch.load(model_path_512)
+    model_512.eval()
+    print("loading 512 resnet")
+
+    def get_feature_vector(self, rawbox, img_path, svc=False, vec="1024"):
         if svc:
             input_image = Image.fromarray(img_path,mode="RGB")
         else:
@@ -37,6 +44,11 @@ class Resnet:
         width, height = input_image.size
         crop_image = input_image.crop(rawbox)
         crop_image = crop_image.convert('RGB')
+
+        if vec == "1024":
+            model = self.model_1024
+        elif vec == "512":
+            model = self.model_512
 
         input_size = 224
         preprocess = transforms.Compose([
@@ -50,12 +62,12 @@ class Resnet:
 
         if torch.cuda.is_available():
             input_batch = input_batch.to('cuda')
-            self.model.to('cuda')
+            model.to('cuda')
 
         with torch.no_grad():
-            self.model(input_batch)
+            model(input_batch)
 
-        fv = self.model.vec_out[0].cpu().numpy()
+        fv = model.vec_out[0].cpu().numpy()
         return fv
 
 class Yolov3:
@@ -250,7 +262,11 @@ class Yolov3:
 
                     xyxy = [int(x) for x in xyxy]
 
-                    RESNET = Resnet.get_feature_vector(Resnet, xyxy, decode_img, svc=True)
+                    if type == "resnet512":
+                        RESNET = Resnet.get_feature_vector(Resnet, xyxy, decode_img, svc=True, vec="512")
+                    elif type == "resnet1024":
+                        RESNET = Resnet.get_feature_vector(Resnet, xyxy, decode_img, svc=True, vec="1024")
+
                     MAC = max_pooling_tensor(feature_result)
                     SPoC = average_pooling_tensor(feature_result)
                     CAT = torch.cat((MAC, SPoC))
@@ -264,7 +280,7 @@ class Yolov3:
                         vector = SPoC.detach().cpu().numpy()
                     elif type == 'cat':
                         vector = CAT.detach().cpu().numpy()
-                    elif type == 'resnet':
+                    elif 'resnet' in type:
                         vector = RESNET
 
                     class_data = {

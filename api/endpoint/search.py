@@ -36,10 +36,9 @@ async def search_vec(vector: model.Vector):
         if type == 'mac': vector_type = 'yolo_vector_mac'
         elif type == 'spoc': vector_type = 'yolo_vector_spoc'
         elif type == 'cat': vector_type = 'yolo_vector_cat'
-    elif model == 'resnet':
+    elif 'resnet' in model:
         vec = Yolov3.vector_extractor_by_model_service(Yolov3, img_b64, vector.model)
         vector_type = 'resnet_vector'
-    
     else:
         return "-1"
 
@@ -70,10 +69,10 @@ async def search_vec(vector: model.Vector):
     
     print("data collect", time.time()-d)
 
-    if type=="1024":
-        el_idx = "resnet1024_"
-    elif type=="512":
-        el_idx = "pirs_"
+    if "1024" in model:
+        el_idx = "resnet1024"
+    elif "512" in model:
+        el_idx = "pirs"
     else:
         el_idx=""
     
