@@ -39,6 +39,7 @@ async def search_vec(vector: model.Vector):
     elif model == 'resnet':
         vec = Yolov3.vector_extractor_by_model_service(Yolov3, img_b64, vector.model)
         vector_type = 'resnet_vector'
+    
     else:
         return "-1"
 
@@ -55,7 +56,7 @@ async def search_vec(vector: model.Vector):
             if search_idx == -1: continue
 
             #box_size = (rb[2]-rb[0])*(rb[3]-rb[1])
-            # if box_size < 0.07: continue
+            # if box_size < 0.07: czzzontinue
 
             """ cx, cy = (rb[2]-rb[0])/2+rb[0], (rb[3]-rb[1])/2+rb[1]
             if not 0.1 < cx < 0.9 or not 0.1 < cy < 0.9:
@@ -69,11 +70,22 @@ async def search_vec(vector: model.Vector):
     
     print("data collect", time.time()-d)
 
+    if type=="1024":
+        el_idx = "resnet1024_"
+    elif type=="512":
+        el_idx = "pirs_"
+    else:
+        el_idx=""
+    
+    idx_list = [el_idx+idx for idx in idx_list]
+    print(idx_list)
+
     if len(rb_list) == 0:
         return "-1"
     
     el_time = time.time()
     res = Elk.multi_search_vec(Elk, idx_list, vb_list, vector.k, vector_type)
+    
     print("multi search ", time.time()-el_time)
 
     parsing_time = time.time()
