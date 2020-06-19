@@ -22,15 +22,61 @@ with open('utils/category_mapping.json', 'r') as f:
 with open('utils/category_mapping_search.json', 'r') as f:
     mapping_ops = json.load(f)
 
+from cirtorch.networks.cgd import init_network, extract_vectors, extract_vectors_svc
+
+import torch
+from torch.utils.data import DataLoader
+from torchvision import transforms, utils
+
+class Cgd:
+    model_params = {}
+    model_params['architecture'] = 'seresnet50'
+    model_params['output_dim'] = 1536
+    model_params['combination'] = 'MG'
+    model_params['pretrained'] = True
+    model_params['classes'] = 17329
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    state = torch.load('/mnt/piclick/piclick.ai/weights/model_best.pth.tar')
+    model = init_network(model_params).to(device)
+    model.load_state_dict(state['state_dict'])
+
+    def get_cgd_vec(self, images):
+
+        transform = transforms.Compose([
+            transforms.Resize(252),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4324, 0.4994, 0.4856),(0.1927, 0.1811, 0.1817))
+            ])
+
+        vecs = extract_vectors(self.model, images, image_size=None, transform=transform, bbxs=None, ms=[1], msp=1, print_freq=10)
+        #vec_flat = torch.flatten(vecs).cpu().numpy()
+        return vecs
+
+    def get_cgd_vec_decodeImg(self, pilImage):
+
+        transform = transforms.Compose([
+            transforms.Resize(252),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4324, 0.4994, 0.4856),(0.1927, 0.1811, 0.1817))
+            ])
+
+        vecs = extract_vectors_svc(self.model, [pilImage], image_size=None, transform=transform, bbxs=None, ms=[1], msp=1, print_freq=10)
+        vec_flat = torch.flatten(vecs).cpu().numpy()
+        return vec_flat    
+
+
 
 class Resnet:
 
-    model_path_1024 = "resnet/resnet_irs_v9"
+    model_path_1024 = "/mnt/piclick/piclick.ai/weights/resnet_irs_v9"
     model_1024 = torch.load(model_path_1024)
     model_1024.eval()
     print("loading 1024 resnet")
 
-    model_path_512 = "resnet/resnet_irs_v5"
+    model_path_512 = "/mnt/piclick/piclick.ai/weights/resnet_irs_v5"
     model_512 = torch.load(model_path_512)
     model_512.eval()
     print("loading 512 resnet")
@@ -68,6 +114,7 @@ class Resnet:
             model(input_batch)
 
         fv = model.vec_out[0].cpu().numpy()
+        print("done")
         return fv
 
 class Yolov3:
@@ -157,6 +204,7 @@ class Yolov3:
                         xyxy = [np.asarray(torch.round(x).cpu().numpy(), dtype=np.int32) for x in xyxy]
 
                         RESNET = Resnet.get_feature_vector(Resnet, [int(x) for x in xyxy], paths[i])
+                        #CGD = Cgd.get_cgd_vec(Cgd, [int(x) for x in xyxy], paths[i])
                         #MAC = max_pooling_tensor(feature_result)
                         #SPoC = average_pooling_tensor(feature_result)
                         #CAT = torch.cat((MAC, SPoC))
@@ -170,6 +218,7 @@ class Yolov3:
                         #    'yolo_vector_spoc': SPoC.detach().cpu().numpy(),
                         #    'yolo_vector_cat': CAT.detach().cpu().numpy(),
                             'resnet_vector': RESNET,
+                        #    'cgd_vector' : CGD,
                             'img_path': paths[i],
                             'state': 'fbox'
                         }
@@ -585,7 +634,7 @@ class Yolov3:
         return img_res
 
 
-    def vector_extraction_service_full(self, base_img, pooling='max'):
+    def vector_extraction_service_full_backup(self, base_img, pooling='max'):
         list_names = []
 
         names = load_classes(self.names_path)
@@ -633,47 +682,34 @@ class Yolov3:
         return data
 
     
-    def vector_extraction_batch_full(self, data, batch_size):
-        dataset = LoadImages(data, self.img_size, batch_size=batch_size)
-        dataloader = DataLoader(dataset,
-                                batch_size=batch_size,
-                                num_workers=min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8]),
-                                pin_memory=True,
-                                collate_fn=dataset.collate_fn)
+    def vector_extraction_batch_full(self, bulk_path):
+        
+        vec = Cgd.get_cgd_vec(Cgd, bulk_path)
 
         result_list = []
+        for i in range(vec.size()[1]):
+            data = {
+                'cgd_vector' : vec[:, i],
+                'img_path': bulk_path[i],
+                'state': 'full'
+            }
 
-        for batch_i, (imgs, paths, shapes) in enumerate(tqdm(dataloader)):
-            batch_time = time.time()
-            torch.cuda.empty_cache()
-
-            with torch.no_grad():
-                imgs = imgs.to(self.device).float() / 255.0
-                _, _, height, width = imgs.shape
-
-                layerResult = LayerResult(self.model.module_list, 80)
-                pred = self.model(imgs)[0]
-                layerResult_tensor = layerResult.features.permute([0, 2, 3, 1])
-                LayerResult.unregister_forward_hook(layerResult)
-
-                for i in range(layerResult_tensor.shape[0]):
-                    MAC = max_pooling_tensor(layerResult_tensor[i])
-                    SPoC = average_pooling_tensor(layerResult_tensor[i])
-                    CAT = torch.cat((MAC, SPoC))
-
-                    data = {
-                        'feature_vector_mac': MAC.detach().cpu().numpy(),
-                        'feature_vector_spoc': SPoC.detach().cpu().numpy(),
-                        'feature_vector_cat': CAT.detach().cpu().numpy(),
-                        'img_path': paths[i],
-                        'state': 'full'
-                    }
-
-                    result_list.append(data)
-
-        batch_end = time.time() - batch_time
-        print(" Inference time for a image : {}".format(batch_end / batch_size))
-        print(" Inference time for batch image : {}".format(batch_end))
+            result_list.append(data)
 
         return result_list
+
+    def vector_extraction_service_full(self, imagePIL):
+
+        """ img_bytes = base64.b64decode(base_img)
+        file_bytes = np.asarray(bytearray(BytesIO(img_bytes).read()), dtype=np.uint8)
+        decode_img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+        """
+        vec_flat = Cgd.get_cgd_vec_decodeImg(Cgd, imagePIL)
+
+
+        data = {
+            'cgd_vector': vec_flat
+        }
+
+        return data
 

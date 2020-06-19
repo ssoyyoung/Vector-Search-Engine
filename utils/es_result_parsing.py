@@ -24,6 +24,7 @@ def es_parsing(res, rb_list=[], cate_list=[], multi=True):
             data['raw_box']=None
             es.append(data)
         es_obj['input_raw_box'] = None
+        es_obj['cat_key'] = None
         es_obj['search_result'] = es
         es_total.append(es_obj)
 

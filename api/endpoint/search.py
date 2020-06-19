@@ -28,7 +28,8 @@ router = APIRouter()
 async def search_vec(vector: model.Vector):
     es_res = {}
     search_time = time.time()
-    img_b64, sex, type, model = vector.img_b64.encode(), vector.sex, vector.type, vector.model
+    img_b64, sex, model, topK = vector.b64Image.encode(), vector.gender, vector.model, vector.topK
+    #img_b64, sex, type, model = vector.img_b64.encode(), vector.sex, vector.type, vector.model
     rb_list, vb_list, idx_list, cate_list = [], [], [], []
 
     if model == 'yolo':
@@ -83,7 +84,7 @@ async def search_vec(vector: model.Vector):
         return "-1"
     
     el_time = time.time()
-    res = Elk.multi_search_vec(Elk, idx_list, vb_list, vector.k, vector_type)
+    res = Elk.multi_search_vec(Elk, idx_list, vb_list, topK, vector_type)
     
     print("multi search ", time.time()-el_time)
 
@@ -132,3 +133,28 @@ async def search_exist(d_img: model.DoubleIMG):
 
     return "DONE"
 
+# 상위 prefix로 설정 한 search_vec/box로 연결.
+@router.post("/full")
+async def search_vec_full(vector: model.Vector):
+    es_res = {}
+    search_time = time.time()
+    b64_img, sex, model, topK = vector.b64Image.encode(), vector.gender, vector.model, vector.topK
+
+    """ 
+    [Test]
+    import base64
+    with open("../Simple-Image-Retrieval/testImg/test.jpg", "rb") as image_file:
+        b64_img = base64.b64encode(image_file.read())
+    """
+    img = Image.open(BytesIO(base64.b64decode(b64_img))).convert('RGB')
+    vec = Yolov3.vector_extraction_service_full(Yolov3, img)
+    if len(vec) == 0: return "-1"
+
+   
+    el_idx ="cgd*"
+    res = Elk.search_vec(Elk, el_idx, vec)
+
+    es_res['es_res'] = es_parsing(res, multi=False)
+    es_res['service_time'] = time.time() - search_time
+    print('Interface time for searching vec', time.time()-search_time)
+    return es_res

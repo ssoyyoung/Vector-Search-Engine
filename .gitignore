@@ -2,6 +2,8 @@ apex/*
 *__pycache__*
 resnet/resnet_irs_v5
 resnet/resnet_irs_v9
-
+cirtorch
 testset/*
 info.json
+*.ipynd
+.ipynb_checkpoints

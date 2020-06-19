@@ -76,23 +76,7 @@
       "status" : {
         "type" : "long"
       },
-      "yolo_vector_mac" : {
-        "type" : "binary",
-        "doc_values" : true
-      },
-      "yolo_vector_spoc" : {
-        "type" : "binary",
-        "doc_values" : true
-      },
-      "yolo_vector_spoc_w/o_norm" : {
-        "type" : "binary",
-        "doc_values" : true
-      },
-      "yolo_vector_cat" : {
-        "type" : "binary",
-        "doc_values" : true
-      },
-      "resnet_vector" : {
+      "cgd_vector" : {
         "type" : "binary",
         "doc_values" : true
       }

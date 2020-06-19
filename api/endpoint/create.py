@@ -25,7 +25,7 @@ router = APIRouter()
 
 @router.put("/db/{cate}")
 async def make_vector_db(cate: str):
-    debug = False
+    debug = True
     save_time = time.time()
     
     if cate == "all":
@@ -112,3 +112,57 @@ async def make_vector_db_testset():
     print('Interface time for saving all data', time.time() - save_time)
 
     return "send to elk"
+
+
+@router.put("/db_full/{cate}")
+def save_vector_el(cate: str):
+    debug = False
+
+    if cate == "all":
+        sql_query = "SELECT * FROM `crawling_list` WHERE STATUS=1 AND cat_key NOT LIKE '%10'"
+    else:
+        sql_query = "SELECT * FROM `crawling_list` WHERE STATUS=1 AND cat_key='"+cate+"'"
+
+    product_list = SQL.connect_db(imgtovec, sql_query)
+    print('Total count of product list', len(product_list))
+
+    batch_size, split_data = 200, 2000
+    img_path_list, cate_list, data_dict = [], [], {}
+    save_time = time.time()
+
+    for idx, product in enumerate(product_list):
+        line = list(product)
+        img_path = imgtovec.base_img_path + line[7] + os.sep + line[8]
+
+        if not os.path.isfile(img_path): continue
+        if cv2.imread(img_path) is None: continue
+        try: Image.open(img_path).convert('RGB')
+        except: continue
+
+        img_path_list.append(img_path)
+        cate_list.append(line[2])
+        data_dict[img_path] = [line[0], line[1], line[2], line[3], line[5], line[6], img_path, line[9], line[10], line[15]]
+       
+        total_vec, total_list = {}, []
+
+        if len(img_path_list) % split_data == 0:
+            print("id", data_dict[img_path_list[-1]][0],'...ing')
+            n = 0
+            batch_time = time.time()
+            for size in range(math.ceil(len(img_path_list) / batch_size)):
+                bulk_path = img_path_list[batch_size * n:batch_size * (n + 1)]
+                category = cate_list[batch_size * n:batch_size * (n + 1)]
+                n += 1
+
+                vec = Yolov3.vector_extraction_batch_full(Yolov3, bulk_path=bulk_path)
+                total_list += vec
+
+            if not debug: Elk.save_vector_cgd(Elk, total_list, data_dict)
+            print('Interface time for batch data', time.time() - batch_time)
+            img_path_list.clear(), cate_list.clear(), data_dict.clear(), vec.clear()
+
+    print('Interface time for saving all data', time.time() - save_time)
+    return 'send to elk'
+
+   
+        

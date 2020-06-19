@@ -8,7 +8,7 @@ class Elk:
     es = Elasticsearch('172.16.0.240:9200', timeout=30, max_retries=10, retry_on_timeout=True)
 
     search_index = 'pirs_'
-    save_index = 'resnet1024_'
+    save_index = 'cgd1536_'
 
     def create_index(self, index):
         with open('mapping.json', 'r') as f:
@@ -83,6 +83,7 @@ class Elk:
                         #"yolo_vector_spoc_w/o_norm": encode_array(total_vec[v_idx][count]['yolo_vector_spoc']),
                         #"yolo_vector_cat": encode_array(total_vec[v_idx][count]['yolo_vector_cat']),
                         "resnet_vector": encode_array(total_vec[v_idx][count]['resnet_vector']),
+                        #"cgd_vector": encode_array(total_vec[v_idx][count]['cgd_vector']),
                         "box_statue": total_vec[v_idx][count]['state'],
                         "@timestamp": utc_time()
                     }
@@ -90,14 +91,13 @@ class Elk:
         helpers.bulk(self.es, docs)
         print('Interface time for sending to elastic', time.time() - es_time)
 
-    def search_vec(self, search_index, search_vec, size=1):
+    def search_vec(self, search_index, search_vec, size=10):
         st_time = time.time()
-        #search_index = self.search_index + search_index.lower()
         res = self.es.search(
             index=search_index,
             body={
                 "_source": {
-                    "includes": ["_index", "img_url"]
+                    "includes": ["_index", "_score", "box_statue", "cat_key", "gs_bucket", "click_url", "image_path", "raw_box"]
                 },
                 "query": {"function_score": {
                     "boost_mode": "replace",
@@ -105,8 +105,8 @@ class Elk:
                         "source": "binary_vector_score", "lang": "knn",
                         "params": {
                             "cosine": True,
-                            "field": "vector",
-                            "encoded_vector": search_vec
+                            "field": "cgd_vector",
+                            "encoded_vector": encode_array(search_vec['cgd_vector'])
                         }
                     }
                     }
@@ -154,5 +154,35 @@ class Elk:
         }
 
         self.es.index(index=index, doc_type="_doc", body=doc)
+
+    
+    def save_vector_cgd(self,total_vec, data_dict):
+        new_index = "cgd_full"
+        self.create_index(self, new_index)
+
+        docs = []
+        es_time = time.time()
+        for count in range(len(total_vec)):
+            docs.append({
+                '_index': new_index,
+                '_source': {
+                    "id": data_dict[total_vec[count]['img_path']][0],
+                    "au_id": data_dict[total_vec[count]['img_path']][1],
+                    "cat_key": data_dict[total_vec[count]['img_path']][2],
+                    "i_key": data_dict[total_vec[count]['img_path']][3],
+                    "img_url": data_dict[total_vec[count]['img_path']][4],
+                    "click_url": data_dict[total_vec[count]['img_path']][5],
+                    "img_path": data_dict[total_vec[count]['img_path']][6],
+                    "group_id": data_dict[total_vec[count]['img_path']][7],
+                    "status": data_dict[total_vec[count]['img_path']][8],
+                    "p_key": data_dict[total_vec[count]['img_path']][3],  # 임시
+                    "gs_bucket" : "https://storage.cloud.google.com"+data_dict[total_vec[count]['img_path']][9][4:],
+                    "cgd_vector": encode_array(total_vec[count]['cgd_vector']),
+                    "box_statue": total_vec[count]['state'],
+                    "@timestamp": utc_time()
+                }
+            })
+        helpers.bulk(self.es, docs)
+        print('Interface time for sending to elastic', time.time() - es_time)
 
 
