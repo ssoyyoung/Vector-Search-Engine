@@ -1,4 +1,5 @@
 {
-    "python.pythonPath": "/root/anaconda3/envs/fastapi/bin/python",
-    "python.jediEnabled": false
+    "python.pythonPath": "/root/anaconda3/envs/tensor/bin/python",
+    "python.jediEnabled": false,
+    "python.languageServer": "Microsoft"
 }
