@@ -5,3 +5,5 @@ info.json
 DBinfo.json
 config.py
 temp/*
+resultFile/*
+*.ipynd

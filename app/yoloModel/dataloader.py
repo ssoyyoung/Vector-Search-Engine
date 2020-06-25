@@ -4,7 +4,7 @@ from PIL import Image
 
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
-from vectorAPI.yoloModel import utils
+from app.yoloModel import utils
 
 # tranforms
 transform = transforms.Compose([
@@ -26,13 +26,13 @@ class YoloDataset(Dataset):
         return len(self.img_files)
 
     def __getitem__(self, idx):
+
         '''
         Output : tensor, originalImg(PIL), imgPath, originalImg w & h
         '''
-
+        
         # PIL image.size = width, height
         imgPath = self.img_files[idx]
-        print(imgPath)
         img0 = Image.open(imgPath).convert('RGB')
         w0, h0 = img0.size
         img = utils.letterbox(img0, 416)

@@ -1,14 +1,14 @@
 import faiss
 from sklearn.preprocessing import normalize
 
-from config import ExtractorCofing, ResultFile
+from config import ExtractorCofing, ResultConfig
 from vectorAPI.extVector import extractVec
 
 # default settings 
-baseDir = ResultFile.BASE_DIR
-fvecsBin = ResultFile.FVECS_BIN
-fnamesTxt = ResultFile.FNAMES
-indexType = ResultFile.INDEX_TYPE
+baseDir = ResultConfig.BASE_DIR
+fvecsBin = ResultConfig.FVECS_BIN
+fnamesTxt = ResultConfig.FNAMES
+indexType = ResultConfig.INDEX_TYPE
 
 def getVec(fname):
     res = extractVec(fname)

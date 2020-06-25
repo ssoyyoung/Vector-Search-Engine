@@ -7,14 +7,14 @@ import random
 import numpy as np
 from sklearn.preprocessing import normalize
 
-from config import ExtractorCofing, ResultFile, DataConfig
+from config import ExtractorCofing, ResultConfig, DataConfig
 
 
 # default settings 
-baseDir = ResultFile.BASE_DIR
-fvecsBin = ResultFile.FVECS_BIN
-fnamesTxt = ResultFile.FNAMES
-indexType = ResultFile.INDEX_TYPE
+baseDir = ResultConfig.BASE_DIR
+fvecsBin = ResultConfig.FVECS_BIN
+fnamesTxt = ResultConfig.FNAMES
+indexType = ResultConfig.INDEX_TYPE
 
 
 def get_index(index_type, dim):

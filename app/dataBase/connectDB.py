@@ -6,6 +6,13 @@ from PIL import Image
 from config import Setting
 
 def connect():
+    '''
+    Commnet : Connect MySQL DataBase
+    `
+    @parameter : None
+    `
+    @return : Connection
+    '''
     conn = pymysql.connect( 
                         host=Setting.DATABASE_HOST,
                         user=Setting.DATABASE_USER,
@@ -17,6 +24,13 @@ def connect():
 
 
 def getData(cate, num):
+    '''
+    Commnet : Connect MySQL DB and get IMG list
+    `
+    @parameter : category(select db category), num(select data count(=limit))
+    `
+    @return : Image Path List [Type : List]
+    '''
 
     base_img_path = Setting.BASE_IMG_PATH
 
@@ -33,8 +47,7 @@ def getData(cate, num):
 
     # change img_path
     imgList = [base_img_path+path+"/"+name for _, path, name in data]
-    idList = [dbId for dbId, _, _ in data]
-    imgList = checkImgStatus(imgList,idList) #yoloModel.utils.checkImgStatus
+    imgList = checkImgStatus(imgList) #yoloModel.utils.checkImgStatus
 
     curs.close(), conn.close()
 
@@ -42,9 +55,18 @@ def getData(cate, num):
 
 
 
-def checkImgStatus(imgList, idList):
-    TimgList, TidList = [], []
-    for img_path, dbId in zip(imgList,idList):
+def checkImgStatus(imgList):
+    '''
+    Comnet : Image file Validation check
+    `
+    @parameter : Image Path [Type : List]
+    `
+    @return : Valid Image Path [Type : List]
+    '''
+    
+    TimgList = []
+
+    for img_path in imgList:
         if not os.path.isfile(img_path): 
             continue
         if cv2.imread(img_path) is None: 
@@ -54,6 +76,5 @@ def checkImgStatus(imgList, idList):
         except: 
             continue
         TimgList.append(img_path)
-        TidList.append(dbId)
 
-    return TimgList, TidList
+    return TimgList

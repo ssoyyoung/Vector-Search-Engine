@@ -1,17 +1,11 @@
 # Flask App
 from flask import Flask
+from app import router
 
-# Model
-#from vectorAPI.yoloModel.models import YoloV3
-#from vectorAPI.baseModel.models import Resnet18
-
-# Run
-from vectorAPI.extVector import *
+from config import DataConfig as D
 
 app = Flask(__name__)
 
-#yoloM = YoloV3()
-#resnet18 = Resnet18()
 
 @app.route('/')
 def checkHealthy():
@@ -19,8 +13,7 @@ def checkHealthy():
 
 @app.route('/createVec')
 def createVec():
-    extractVecAndSave()
-    print(res)
+    router.makeDBindex(D.CATE, D.NUM, D.WRITE_M)
     return "done"
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from vectorAPI.yoloModel.utils import *
+from app.yoloModel.utils import *
 from config import YoloConfig
 
 
