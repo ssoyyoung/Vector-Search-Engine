@@ -53,6 +53,9 @@ async def search_vec(vector: model.Vector):
     elif model == "cgd90":
         vec = Yolov3.vector_extractor_by_model_service(Yolov3, img_b64, vector.model)
         vector_type = 'cgd90_vector'
+    elif model == "cgd7":
+        vec = Yolov3.vector_extractor_by_model_service(Yolov3, img_b64, vector.model)
+        vector_type = 'cgd7_vector'
 
 
     else:
@@ -97,6 +100,8 @@ async def search_vec(vector: model.Vector):
         el_idx="cgd44"
     elif model == "cgd90":
         el_idx="cgd90"
+    elif model == "cgd7":
+        el_idx="cgd7"
     else : 
         el_idx = ""
 
